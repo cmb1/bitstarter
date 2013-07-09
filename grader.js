@@ -26,6 +26,7 @@ var util = require('util');
 var rest = require('restler');
 var program = require('commander');
 var cheerio = require('cheerio');
+var request = require('request');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 var URL_DEFAULT = "http://evening-headland-9888.herokuapp.com";
@@ -50,6 +51,16 @@ var cheerioHtmlFile = function(htmlfile) {
     return cheerio.load(fs.readFileSync(htmlfile));
 };
 
+var cheerioUrl = function(url) {
+    var urlstring = requestUrl(url);
+    return cheerio.load(urlstring);
+};
+
+var requestUrl = function(url) {
+    var urlstring = request(url, gotHTML);
+    return urlstring;
+};
+
 var loadChecks = function(checksfile) {
     return JSON.parse(fs.readFileSync(checksfile));
 };
@@ -65,6 +76,23 @@ var checkHtmlFile = function(htmlfile, checksfile) {
     return out;
 };
 
+function gotHTML(err, resp, html) {
+  if (err) return console.error(err)
+  var parsedHTML = cheerio.load(html)
+  return parsedHTML
+}
+
+var checkUrl = function(url, checksfile) {
+    $ = cheerioUrl(url);
+    var checks = loadChecks(checksfile).sort();
+    var out = {};
+    for(var ii in checks) {
+	var present = $(checks[ii]).length > 0;
+	out[checks[ii]] = present;
+    }
+    return out;
+};
+
 var clone = function(fn) {
     // Workaround for commander.js issue.
     // http://stackoverflow.com/a/6772648
@@ -74,12 +102,15 @@ var clone = function(fn) {
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
-        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-        .option('-u, --url <url>', 'Url', clone(assertUrlExists), URL_DEFAULT)
+        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists))
+        .option('-u, --url <weburl>', 'Url', clone(assertUrlExists))
         .parse(process.argv);
     
-    if (program.file) { var checkJson = checkHtmlFile(program.file, program.checks)};
-    if (program.url) { var checkJson = checkHtmlFile(program.url, program.checks)};
+    if (program.file) { var checkJson = checkHtmlFile(program.file, program.checks); };
+    if (program.url) { var checkJson = checkUrl(program.url, program.checks); };
+
+    /* var checkJson = checkHtmlFile(program.file, program.checks); */
+    /* if (program.url) { var checkJson = checkHtmlFile(program.url, program.checks)}; */
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
 } else {
