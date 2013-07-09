@@ -28,7 +28,7 @@ var program = require('commander');
 var cheerio = require('cheerio');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
-var URL_DEFAULT = "http://evening-headland-9888.herokuapp.com/";
+var URL_DEFAULT = "http://evening-headland-9888.herokuapp.com";
 
 var assertUrlExists = function(weburl) {
    var resultstr = rest.get(weburl).on('complete', function(result) {
@@ -78,10 +78,6 @@ if(require.main == module) {
         .option('-u, --url <url>', 'Url', clone(assertUrlExists), URL_DEFAULT)
         .parse(process.argv);
     
-    process.argv.forEach(function (val, index, array) {
-	console.log(index + ': ' + val);
-    });
-
     if (program.file) { var checkJson = checkHtmlFile(program.file, program.checks)};
     if (program.url) { var checkJson = checkHtmlFile(program.url, program.checks)};
     var outJson = JSON.stringify(checkJson, null, 4);
