@@ -52,13 +52,8 @@ var cheerioHtmlFile = function(htmlfile) {
 };
 
 var cheerioUrl = function(url) {
-    var urlstring = requestUrl(url);
-    return cheerio.load(urlstring);
-};
-
-var requestUrl = function(url) {
     var urlstring = request(url, gotHTML);
-    return urlstring;
+    return cheerio.load(urlstring);
 };
 
 var loadChecks = function(checksfile) {
